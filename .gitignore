@@ -1,0 +1,4 @@
+# IDEA Ignores #
+################
+CoreNLP/
+lib/
