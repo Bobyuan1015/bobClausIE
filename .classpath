@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/xom.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/xom-1.2.10-src.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/stanford-corenlp-3.9.1.jar" sourcepath="CoreNLP"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/stanford-corenlp-3.9.1-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/stanford-corenlp-3.9.1-models.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/stanford-corenlp-3.9.1-javadoc.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/slf4j-simple.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/slf4j-api.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/protobuf.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/jollyday.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/jollyday-0.4.9-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/joda-time.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/joda-time-2.9-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/javax.json.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/javax.json-api-1.0-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/ejml-0.23.jar"/>
+	<classpathentry kind="lib" path="/Users/bob/eclipse-workspace/bobClausIE/lib/jopt-simple-4.4.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
