@@ -124,7 +124,9 @@ public class DpUtils {
 
     /** Checks if a given edge holds a prepositional object relation*/
     public static boolean isPobj(SemanticGraphEdge edge) {
-        return UniversalEnglishGrammaticalRelations.PREPOSITION.equals(edge.getRelation());
+        //JEFF POBJ now NMOD
+    	//return UniversalEnglishGrammaticalRelations.PREPOSITIONAL_OBJECT.equals(edge.getRelation());
+        return UniversalEnglishGrammaticalRelations.NOMINAL_MODIFIER.equals(edge.getRelation());
     }//"I saw the book which you bought" → ref(book, which) 
     //"I saw the book the cover of which you designed" → ref(book, which)
 
@@ -160,8 +162,10 @@ public class DpUtils {
 
     /** Checks if a given edge holds an purpose clause modifier relation */
     public static boolean isPurpcl(SemanticGraphEdge edge) {
+    	//JEFF: the "Purpose Clause" is reserved for the term "in order to"; it was retired. There doesn't seem 
+    	// to be an equivalent. It's a special case of ADVCL. I'm modifying one line and hard coding to return false:
         //return UniversalEnglishGrammaticalRelations.PURPOSE_CLAUSE_MODIFIER.equals(edge.getRelation());
-    	return UniversalEnglishGrammaticalRelations.ADV_CLAUSE_MODIFIER.equals(edge.getRelation());
+    	return false;
     	//"The accident happened as the night was falling" → advcl(happened, falling) 
     	//"If you know who did it, you should tell the teacher" → advcl(tell, know)
     }
@@ -173,8 +177,10 @@ public class DpUtils {
 
     /** Checks if a given edge holds a complementizer relation */
     public static boolean isComplm(SemanticGraphEdge edge) {
+    	//JEFF: the "Complementizer" was discontinued. It matched words like "that" or "whether". It was moved into "MARK"
+    	//I'm going to hardcode it to always return false. 
         //return UniversalEnglishGrammaticalRelations.COMPLEMENTIZER.equals(edge.getRelation());
-    	return UniversalEnglishGrammaticalRelations.MARKER.equals(edge.getRelation());
+    	return false; 
     	//"U.S. forces have been engaged in intense fighting after insurgents launched simultaneous attacks" 
     	//→ mark(launched, after)
     }
@@ -196,7 +202,9 @@ public class DpUtils {
 
     /** Checks if a given edge holds a prepositional modifier relation */
     public static boolean isAnyPrep(SemanticGraphEdge edge) {
-        return UniversalEnglishGrammaticalRelations.PREPOSITION.isAncestor(edge.getRelation());
+    	//JEFF, no UD equivalent; This is likely wrong. 
+        //return UniversalEnglishGrammaticalRelations.PREPOSITIONAL_MODIFIER.isAncestor(edge.getRelation());
+        return UniversalEnglishGrammaticalRelations.CASE_MARKER.isAncestor(edge.getRelation());
     }
 
     /** Checks if a given edge holds a copular relation */
@@ -206,7 +214,11 @@ public class DpUtils {
 
     /** Checks if a given edge holds an adverbial clausal relation */
     public static boolean isAdvcl(SemanticGraphEdge edge) {
-        return UniversalEnglishGrammaticalRelations.ADV_CLAUSE_MODIFIER.equals(edge.getRelation());
+    	//JEFF modified to allow for UD's 2 types of ADV Clause MOdifiers (one is for copula) 
+        //return UniversalEnglishGrammaticalRelations.ADV_CLAUSE_MODIFIER.equals(edge.getRelation());
+    	return (UniversalEnglishGrammaticalRelations.CLAUSAL_MODIFIER.equals(edge.getRelation()) ||
+    			UniversalEnglishGrammaticalRelations.ADV_CLAUSE_MODIFIER.equals(edge.getRelation())
+    			);
     }
 
     /** Checks if a given edge holds a relative clause modifier relation */
@@ -236,7 +248,11 @@ public class DpUtils {
 
     /** Checks if a given edge holds a propositional complement relation */
     public static boolean isPcomp(SemanticGraphEdge edge) {
-        return UniversalEnglishGrammaticalRelations.PREPOSITION.equals(edge.getRelation());
+    	//JEFF, no equivalent in UD; it looks like they're using a combination of "acl" and "advcl" 
+        //return UniversalEnglishGrammaticalRelations.PREPOSITIONAL_COMPLEMENT.equals(edge.getRelation());
+        return (UniversalEnglishGrammaticalRelations.ADV_CLAUSE_MODIFIER.equals(edge.getRelation()) ||
+        		UniversalEnglishGrammaticalRelations.CLAUSAL_MODIFIER.equals(edge.getRelation())
+        		);
     }
 
     /** Checks if a given edge holds a possession modifier relation */
@@ -246,13 +262,15 @@ public class DpUtils {
 
     /** Checks if a given edge holds a possessive modifier relation */
     public static boolean isPosse(SemanticGraphEdge edge) {
-        return UniversalEnglishGrammaticalRelations.POSSESSION_MODIFIER.equals(edge.getRelation());
+    	//JEFF, modified for a non-exact UD equivalent
+        //return UniversalEnglishGrammaticalRelations.POSSESSIVE_MODIFIER.equals(edge.getRelation());
+    	return UniversalEnglishGrammaticalRelations.CASE_MARKER.equals(edge.getRelation());
     }
 
     /** Checks if a given edge holds a participial modifier relation */
     public static boolean isPartMod(SemanticGraphEdge edge) {
 //        return UniversalEnglishGrammaticalRelations.PARTICIPIAL_MODIFIER.equals(edge.getRelation());
-    	return UniversalEnglishGrammaticalRelations.CLAUSAL_COMPLEMENT.equals(edge.getRelation());
+    		return false; 
 //		"He says that you like to swim" → ccomp(says, like) 
 //    	"I am certain that he did it" → ccomp(certain, did) 
 //    	"I admire the fact that you are honest" → ccomp(fact, honest)
@@ -306,11 +324,9 @@ public class DpUtils {
     
     /** Checks if a given edge holds an infinitival modifier relation */
     public static boolean isInfmod(SemanticGraphEdge edge) {
-//		return UniversalEnglishGrammaticalRelations.INFINITIVAL_MODIFIER.equals(edge.getRelation());
-		return UniversalEnglishGrammaticalRelations.CLAUSAL_COMPLEMENT.equals(edge.getRelation());
-//		"He says that you like to swim" → ccomp(says, like) 
-//		"I am certain that he did it" → ccomp(certain, did) 
-//		"I admire the fact that you are honest" → ccomp(fact, honest)
+    	//JEFF no information on this one; hard coding to return false.
+		//return UniversalEnglishGrammaticalRelations.INFINITIVAL_MODIFIER.equals(edge.getRelation());
+    	return false; 
 	}
     
     /** Checks if a given edge holds a predeterminer relation */

@@ -11,6 +11,7 @@ import bobClausIE.bobClausie.Constituent.Type;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
 import edu.stanford.nlp.trees.GrammaticalRelation;
+import edu.stanford.nlp.trees.UniversalEnglishGrammaticalRelations;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 /**{@link ClauseDetector} contains the methods dealing with the detection of clauses.
@@ -27,11 +28,11 @@ class ClauseDetector {
     protected static final Set<GrammaticalRelation> EXCLUDE_RELATIONS_COMPLEMENT;
     static {
         HashSet<GrammaticalRelation> temp = new HashSet<GrammaticalRelation>();
-        temp.add(EnglishGrammaticalRelations.AUX_MODIFIER);
-        temp.add(EnglishGrammaticalRelations.AUX_PASSIVE_MODIFIER);
-        temp.add(EnglishGrammaticalRelations.SUBJECT);
-        temp.add(EnglishGrammaticalRelations.COPULA);
-        temp.add(EnglishGrammaticalRelations.ADVERBIAL_MODIFIER);
+        temp.add(UniversalEnglishGrammaticalRelations.AUX_MODIFIER);
+        temp.add(UniversalEnglishGrammaticalRelations.AUX_PASSIVE_MODIFIER);
+        temp.add(UniversalEnglishGrammaticalRelations.SUBJECT);
+        temp.add(UniversalEnglishGrammaticalRelations.COPULA);
+        temp.add(UniversalEnglishGrammaticalRelations.ADVERBIAL_MODIFIER);
         EXCLUDE_RELATIONS_COMPLEMENT = Collections.unmodifiableSet(temp);
     }
 
@@ -39,9 +40,9 @@ class ClauseDetector {
     protected static final Set<GrammaticalRelation> INCLUDE_RELATIONS_VERB;
     static {
         HashSet<GrammaticalRelation> temp = new HashSet<GrammaticalRelation>();
-        temp.add(EnglishGrammaticalRelations.AUX_MODIFIER);
-        temp.add(EnglishGrammaticalRelations.AUX_PASSIVE_MODIFIER);
-        temp.add(EnglishGrammaticalRelations.NEGATION_MODIFIER);
+        temp.add(UniversalEnglishGrammaticalRelations.AUX_MODIFIER);
+        temp.add(UniversalEnglishGrammaticalRelations.AUX_PASSIVE_MODIFIER);
+        temp.add(UniversalEnglishGrammaticalRelations.NEGATION_MODIFIER);
         INCLUDE_RELATIONS_VERB = Collections.unmodifiableSet(temp);
     }
 
@@ -166,7 +167,7 @@ class ClauseDetector {
         List<SemanticGraphEdge> toRemove = new ArrayList<SemanticGraphEdge>();
         //to store the heads of the clauses according to the CCs options
         List<IndexedWord> ccs = ProcessConjunctions.getIndexedWordsConj(semanticGraph,
-                clausIE.depTree, clauseRoot, EnglishGrammaticalRelations.CONJUNCT, toRemove,
+                clausIE.depTree, clauseRoot, UniversalEnglishGrammaticalRelations.CONJUNCT, toRemove,
                 options);//         "Bill is big and honest" → conj(big, honest)
         
         System.out.println("---------------" );
@@ -189,7 +190,7 @@ class ClauseDetector {
             Clause clause = new Clause();
             clause.verb = -1;
             SemanticGraphEdge cop = DpUtils.findFirstOfRelation(outgoingEdges,
-                    EnglishGrammaticalRelations.COPULA);//example: "Bill is big" → cop(big, is) 
+            		UniversalEnglishGrammaticalRelations.COPULA);//example: "Bill is big" → cop(big, is) 
             
             Set<IndexedWord> exclude = null;
             Set<IndexedWord> include = null;
@@ -206,13 +207,13 @@ class ClauseDetector {
 
             // relative clause?
             SemanticGraphEdge rcmod = DpUtils.findFirstOfRelation(incomingEdges,
-                    EnglishGrammaticalRelations.RELATIVE_CLAUSE_MODIFIER);// saw the book which you bought" → rcmod(book, bought)
+            		UniversalEnglishGrammaticalRelations.RELATIVE_CLAUSE_MODIFIER);// saw the book which you bought" → rcmod(book, bought)
             SemanticGraphEdge poss = null;
             if (rcmod != null)
             {	 
             	System.out.println("bobDebug---rcmod: " + rcmod.toString());
                 poss = DpUtils.findDescendantRelativeRelation(semanticGraph, root,
-                        EnglishGrammaticalRelations.POSSESSION_MODIFIER);//example: "their offices" → poss(offices, their)
+                		UniversalEnglishGrammaticalRelations.POSSESSION_MODIFIER);//example: "their offices" → poss(offices, their)
                 if( poss!= null ) System.out.println("bobDebug---poss: " + poss.toString());
             }
             System.out.println("bobDebug---0constituents.size(): " + clause.constituents.size());
@@ -255,8 +256,7 @@ class ClauseDetector {
                 } else {
                 	System.out.println("bobDebug---clauseRoot.word() " + clauseRoot.word());
                     constRoot = new TextConstituent("be " + clauseRoot.word(),
-                            Constituent.Type.VERB);
-                    
+                            Constituent.Type.VERB);                   
                 }
 
                 clause.constituents.add(constRoot);
@@ -280,7 +280,7 @@ class ClauseDetector {
                 List<SemanticGraphEdge> outsub = clausIE.semanticGraph.getOutEdgesSorted(subject);
                 System.out.println("bobDebug---outsub= "+outsub.toString());
                 SemanticGraphEdge sub = DpUtils.findFirstOfRelationOrDescendent(outsub,
-                        EnglishGrammaticalRelations.SUBJECT);//"Clinton defeated Dole" → subj(defeated, Clinton) 
+                        UniversalEnglishGrammaticalRelations.SUBJECT);
                 if (sub != null)
                     clause.constituents.add(new IndexedConstituent(semanticGraph, sub
                             .getDependent(), Constituent.Type.SUBJECT));
@@ -300,12 +300,12 @@ class ClauseDetector {
                 //new version of universal DP--> acl: clausal modifier of noun (adjectival clause)
                 List<SemanticGraphEdge> outsub = clausIE.semanticGraph.getOutEdgesSorted(subject);
                 SemanticGraphEdge coppm = DpUtils.findFirstOfRelationOrDescendent(outsub,
-                        EnglishGrammaticalRelations.COPULA);
+                        UniversalEnglishGrammaticalRelations.COPULA);
                 if (coppm != null) {
                     ((IndexedConstituent) clause.constituents.get(clause.subject)).excludedVertexes
                             .add(coppm.getDependent());
                     SemanticGraphEdge spm = DpUtils.findFirstOfRelationOrDescendent(outsub,
-                            EnglishGrammaticalRelations.SUBJECT);
+                            UniversalEnglishGrammaticalRelations.SUBJECT);
                     ((IndexedConstituent) clause.constituents.get(clause.subject)).excludedVertexes
                             .add(spm.getDependent());
                 }
@@ -382,7 +382,7 @@ class ClauseDetector {
                     IndexedWord xcompsubject = null;
                     SemanticGraphEdge xcsub = DpUtils.findFirstOfRelationOrDescendent(
                             semanticGraph.getOutEdgesSorted(outgoingEdge.getDependent()),
-                            EnglishGrammaticalRelations.SUBJECT);
+                            UniversalEnglishGrammaticalRelations.SUBJECT);
                     
                 	
                     if (xcsub != null) {
@@ -490,23 +490,23 @@ class ClauseDetector {
                     IndexedConstituent tmpconst = createRelConstituent(newSemanticGraph,
                             rcmod.getGovernor(), Type.ADVERBIAL);
                     System.out.println("tmpconst="+tmpconst.rootString()+"  rcmod.getGovernor()="+rcmod.getGovernor());
-                    newSemanticGraph.addEdge(((IndexedConstituent) candidate).getRoot(),
-                            rcmod.getGovernor(), EnglishGrammaticalRelations.PREPOSITIONAL_OBJECT,
-                            rcmod.getWeight(),false);//"I sat on the chair" → pobj(on, chair)
+                    //newSemanticGraph.addEdge(((IndexedConstituent) candidate).getRoot(), rcmod.getGovernor(), UniversalEnglishGrammaticalRelations.PREPOSITIONAL_OBJECT, rcmod.getWeight());
+                    newSemanticGraph.addEdge(((IndexedConstituent) candidate).getRoot(), rcmod.getGovernor(), UniversalEnglishGrammaticalRelations.NOMINAL_MODIFIER, rcmod.getWeight(), false);
+							//"I sat on the chair" → pobj(on, chair)
                     System.out.println("PREPOSITIONAL_OBJECT=");
                     ((IndexedConstituent) candidate).getExcludedVertexes().addAll(
                             tmpconst.getExcludedVertexes());
                     ((IndexedConstituent) candidate).setSemanticGraph(newSemanticGraph);
                     rcmod = null;
                 } else if (DpUtils.findFirstOfRelation(outgoingEdges,
-                        EnglishGrammaticalRelations.DIRECT_OBJECT) == null) {
+                        UniversalEnglishGrammaticalRelations.DIRECT_OBJECT) == null) {
                 	System.out.println("DIRECT_OBJECT=");
                     clause.dobjects.add(clause.constituents.size());
                     clause.constituents.add(createRelConstituent(semanticGraph,
                             rcmod.getGovernor(), Type.DOBJ));
                     rcmod = null;
                 } else if (DpUtils.findFirstOfRelation(outgoingEdges,
-                        EnglishGrammaticalRelations.INDIRECT_OBJECT) == null) {
+                        UniversalEnglishGrammaticalRelations.INDIRECT_OBJECT) == null) {
                 	System.out.println("INDIRECT_OBJECT=");
                     clause.iobjects.add(clause.constituents.size());
                     clause.constituents.add(createRelConstituent(semanticGraph,
@@ -519,7 +519,7 @@ class ClauseDetector {
             //To deal with parataxis
             //“The guy, John said, left early in the morning” parataxis(left, said)
             SemanticGraphEdge parataxis = DpUtils.findFirstOfRelation(incomingEdges,
-                    EnglishGrammaticalRelations.PARATAXIS);
+                    UniversalEnglishGrammaticalRelations.PARATAXIS);
             System.out.println("To deal with parataxis   parataxis="+parataxis
             		+"  clause.constituents.size()="+clause.constituents.size());
             if (parataxis != null && clause.constituents.size() < 3) {
@@ -560,22 +560,25 @@ class ClauseDetector {
     private static void processRel(SemanticGraphEdge outgoingEdge, SemanticGraph semanticGraph, IndexedWord dependent, SemanticGraphEdge rcmod, Clause clause) {
     	 SemanticGraph newSemanticGraph = new SemanticGraph(semanticGraph);
          List<SemanticGraphEdge> outdep = newSemanticGraph.getOutEdgesSorted(dependent);
-         SemanticGraphEdge pobed = DpUtils.findFirstOfRelation(outdep,
-                 EnglishGrammaticalRelations.PREPOSITIONAL_OBJECT);
-
+         
+         // JEFF CHANGED
+         //SemanticGraphEdge pobed = DpUtils.findFirstOfRelation(outdep, UniversalEnglishGrammaticalRelations.PREPOSITIONAL_OBJECT);
+         SemanticGraphEdge pobed = DpUtils.findFirstOfRelation(outdep, UniversalEnglishGrammaticalRelations.NOMINAL_MODIFIER);
+         
          SemanticGraphEdge posspobj = null;
          if (pobed != null && pobed.getDependent().tag().charAt(0) != 'W') {
              List<SemanticGraphEdge> outpobj = newSemanticGraph
                      .getOutEdgesSorted(dependent);
              posspobj = DpUtils.findFirstOfRelation(outpobj,
-                     EnglishGrammaticalRelations.POSSESSION_MODIFIER);
+                     UniversalEnglishGrammaticalRelations.POSSESSION_MODIFIER);
          }
 
          if (pobed != null && pobed.getDependent().tag().charAt(0) == 'W'
                  && rcmod != null) {
-             newSemanticGraph.addEdge(dependent, rcmod.getGovernor(),
-                     EnglishGrammaticalRelations.PREPOSITIONAL_OBJECT,
-                     pobed.getWeight(),false);
+        	 
+        	 //JEFF CHANGED
+        	 //newSemanticGraph.addEdge(dependent, rcmod.getGovernor(),UniversalEnglishGrammaticalRelations.PREPOSITIONAL_OBJECT, pobed.getWeight());
+             newSemanticGraph.addEdge(dependent, rcmod.getGovernor(),UniversalEnglishGrammaticalRelations.NOMINAL_MODIFIER, pobed.getWeight(),false);
              newSemanticGraph.removeEdge(pobed);
              int constint = clause.constituents.size();
              clause.adverbials.add(constint);
@@ -586,9 +589,10 @@ class ClauseDetector {
              clause.relativeAdverbial = true;
              rcmod = null;
          } else if (pobed != null && posspobj != null && rcmod != null) {
-             newSemanticGraph.addEdge(posspobj.getGovernor(), rcmod.getGovernor(),
-                     EnglishGrammaticalRelations.POSSESSION_MODIFIER,
-                     posspobj.getWeight(),false);
+        	 //JEFF CHANGED; added "false"
+        	 //newSemanticGraph.addEdge(posspobj.getGovernor(), rcmod.getGovernor(),UniversalEnglishGrammaticalRelations.POSSESSION_MODIFIER, posspobj.getWeight());
+             newSemanticGraph.addEdge(posspobj.getGovernor(), rcmod.getGovernor(), 
+            		 UniversalEnglishGrammaticalRelations.POSSESSION_MODIFIER, posspobj.getWeight(), false);
              newSemanticGraph.removeEdge(posspobj);
              int constint = clause.constituents.size();
              clause.adverbials.add(constint);
@@ -626,10 +630,11 @@ class ClauseDetector {
             SemanticGraphEdge poss, SemanticGraphEdge rcmod, IndexedWord constGovernor, Type type) {
 
         SemanticGraph newSemanticGraph = new SemanticGraph(semanticGraph);
-        double weight = poss.getWeight();   //governer is the source, dependant is the target
-        System.out.println("createPossConstituent  addEdge("+poss.getGovernor()+","+ rcmod.getGovernor()+")");
+        double weight = poss.getWeight();
+        // JEFF CHANGED; added "false"
+        //newSemanticGraph.addEdge(poss.getGovernor(), rcmod.getGovernor(),UniversalEnglishGrammaticalRelations.POSSESSION_MODIFIER, weight);
         newSemanticGraph.addEdge(poss.getGovernor(), rcmod.getGovernor(),
-                EnglishGrammaticalRelations.POSSESSION_MODIFIER, weight,false);
+                UniversalEnglishGrammaticalRelations.POSSESSION_MODIFIER, weight, false);
         Set<IndexedWord> exclude = DpUtils.exclude(newSemanticGraph, EXCLUDE_RELATIONS_COMPLEMENT,
                 rcmod.getGovernor());
         newSemanticGraph.removeEdge(poss);
@@ -649,7 +654,7 @@ class ClauseDetector {
         System.out.println("createRelConstituent outrcmod="+outrcmod.toString()+
         		"  root="+root.toString());
         SemanticGraphEdge rccop = DpUtils.findFirstOfRelation(outrcmod,
-                EnglishGrammaticalRelations.COPULA);
+                UniversalEnglishGrammaticalRelations.COPULA);
         if (rccop != null) {
         	// she is A who has a B   
             Set<IndexedWord> excludercmod = DpUtils.exclude(semanticGraph,
@@ -709,11 +714,12 @@ class ClauseDetector {
             List<SemanticGraphEdge> inedges = newSemanticGraph.getIncomingEdgesSorted(root);
             System.out.println("addPossessiveClause   inedges="+inedges.toString());
             rcmod = DpUtils.findFirstOfRelation(inedges,
-                    EnglishGrammaticalRelations.RELATIVE_CLAUSE_MODIFIER);
+                    UniversalEnglishGrammaticalRelations.RELATIVE_CLAUSE_MODIFIER);
         } else {
             List<SemanticGraphEdge> outedges = newSemanticGraph.getOutEdgesSorted(subject);
-            SemanticGraphEdge ps = DpUtils.findFirstOfRelation(outedges,
-                    EnglishGrammaticalRelations.POSSESSIVE_MODIFIER);
+            // JEFF CHANGED
+            //SemanticGraphEdge ps = DpUtils.findFirstOfRelation(outedges, UniversalEnglishGrammaticalRelations.POSSESSIVE_MODIFIER);
+            SemanticGraphEdge ps = DpUtils.findFirstOfRelation(outedges, UniversalEnglishGrammaticalRelations.NOMINAL_MODIFIER);
             if (ps != null)
                 excludesub.add(ps.getDependent());
         }
@@ -772,7 +778,7 @@ class ClauseDetector {
         Constituent verb = new IndexedConstituent(clausIE.semanticGraph, parroot, Type.VERB);
         List<SemanticGraphEdge> outedges = clausIE.semanticGraph.getOutEdgesSorted(parroot);
         SemanticGraphEdge subject = DpUtils.findFirstOfRelationOrDescendent(outedges,
-                EnglishGrammaticalRelations.SUBJECT);
+                UniversalEnglishGrammaticalRelations.SUBJECT);
         if (subject != null) {
             Constituent subjectConst = new IndexedConstituent(clausIE.semanticGraph,
                     subject.getDependent(), Type.SUBJECT);

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,9 +23,12 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.SentenceUtils;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParserQuery;
-
+import edu.stanford.nlp.process.CoreLabelTokenFactory;
+import edu.stanford.nlp.process.PTBTokenizer;
+import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.process.TokenizerFactory;
 import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphFactory;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.GrammaticalStructureFactory;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
@@ -47,6 +50,10 @@ public class ClausIE {
 
 	Options options;
 
+	LexicalizedParser parser; 
+	PennTreebankLanguagePack languagePack; 
+	GrammaticalStructureFactory structureFactory; 
+	
 	private LexicalizedParser lp;
 	TreebankLanguagePack tlp;
 	private TokenizerFactory<CoreLabel> tokenizerFactory;
@@ -93,45 +100,61 @@ public class ClausIE {
 	// ---------------------------------------------------------------------------------
 
 	/** Initializes the Stanford parser. */
+	
 	public void initParser() {
-		lp = LexicalizedParser
-				.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz");
-//	   lp = LexicalizedParser.loadModel(
-//		  "edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz",
-//		  "-maxLength", "80", "-retainTmpSubcategories");
-		   tlp = new PennTreebankLanguagePack();
-		  // Uncomment the following line to obtain original Stanford Dependencies
-		  // tlp.setGenerateOriginalDependencies(true);
-		 
-		
-//		lp = LexicalizedParser
-//				.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz");
-//		tokenizerFactory = PTBTokenizer
-//				.factory(new CoreLabelTokenFactory(), "");
-//		lpq = lp.parserQuery();
+
+		//JEFF COMMENTED OUT NEXT 3 LINES (and put back in) 
+		lp = LexicalizedParser.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz");
+		tokenizerFactory = PTBTokenizer.factory(new CoreLabelTokenFactory(), "");
+		//lpq = lp.parserQuery();
+		//JEFF's NEW 3 LINES:
+	    parser = LexicalizedParser.loadModel();
+	    languagePack = new PennTreebankLanguagePack();
+	    structureFactory = languagePack.grammaticalStructureFactory();
+
+	    lpq = (LexicalizedParserQuery) lp.parserQuery();
 	}
 
 	/** Clears and parses a new sentence. */
 	public void parse(String sentence) {
 		clear();
-		System.out.println("parse  ");
-		 GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
-		  
-		  Tree parse = lp.apply(lp.tokenize(sentence));
-		  GrammaticalStructure gs = gsf.newGrammaticalStructure(parse);
-		  Collection<TypedDependency> tdl = gs.allTypedDependencies();
-		  semanticGraph = new SemanticGraph( tdl );
-		  depTree = parse;
-			System.out.println("depTree="+depTree);
+		System.out.println(sentence); 
+		Tokenizer tokes = tokenizerFactory.getTokenizer(new StringReader(sentence));  
+		List<CoreLabel> tokenizedSentence = tokes.tokenize();
+		lpq.parse(tokenizedSentence); // what about the confidence?
+		depTree = lpq.getBestParse();
+		// use uncollapsed dependencies to facilitate tree creation
 		
-//		List<CoreLabel> tokenizedSentence = tokenizerFactory.getTokenizer(
-//				new StringReader(sentence)).tokenize();
-//		lpq.parse(tokenizedSentence); // what about the confidence?
-//		depTree = lpq.getBestParse();
-//		// use uncollapsed dependencies to facilitate tree creation
-//		semanticGraph = ParserAnnotatorUtils
-//				.generateUncollapsedDependencies(depTree);
+		//JEFF MODIFIED ONE LINE
+		//semanticGraph = ParserAnnotatorUtils.generateUncollapsedDependencies(depTree);
+		semanticGraph = SemanticGraphFactory.generateUncollapsedDependencies(depTree);
+		
+		
 	}
+	
+//	
+//	public void initParser() {
+//		lp = LexicalizedParser
+//				.loadModel("edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz");
+//
+//		   tlp = new PennTreebankLanguagePack();
+//
+//	}
+//
+//	/** Clears and parses a new sentence. */
+//	public void parse(String sentence) {
+//		clear();
+//		System.out.println("parse  ");
+//		 GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
+//		  
+//		  Tree parse = lp.apply(lp.tokenize(sentence));
+//		  GrammaticalStructure gs = gsf.newGrammaticalStructure(parse);
+//		  Collection<TypedDependency> tdl = gs.allTypedDependencies();
+//		  semanticGraph = new SemanticGraph( tdl );
+//		  depTree = parse;
+//			System.out.println("depTree="+depTree);
+//		
+//	}
 
 	/** Returns the constituent tree for the sentence. */
 	public Tree getDepTree() {

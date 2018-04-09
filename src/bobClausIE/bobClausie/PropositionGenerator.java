@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
+import edu.stanford.nlp.trees.UniversalEnglishGrammaticalRelations;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 
@@ -29,13 +29,13 @@ public abstract class PropositionGenerator {
 
     static {
         EXCLUDE_RELATIONS = new HashSet<GrammaticalRelation>();
-        EXCLUDE_RELATIONS.add(EnglishGrammaticalRelations.RELATIVE_CLAUSE_MODIFIER);
-        EXCLUDE_RELATIONS.add(EnglishGrammaticalRelations.APPOSITIONAL_MODIFIER);
-        EXCLUDE_RELATIONS.add(EnglishGrammaticalRelations.PARATAXIS);
+        EXCLUDE_RELATIONS.add(UniversalEnglishGrammaticalRelations.RELATIVE_CLAUSE_MODIFIER);
+        EXCLUDE_RELATIONS.add(UniversalEnglishGrammaticalRelations.APPOSITIONAL_MODIFIER);
+        EXCLUDE_RELATIONS.add(UniversalEnglishGrammaticalRelations.PARATAXIS);
 
         EXCLUDE_RELATIONS_VERB = new HashSet<GrammaticalRelation>();
         EXCLUDE_RELATIONS_VERB.addAll(EXCLUDE_RELATIONS);
-        EXCLUDE_RELATIONS_VERB.add(EnglishGrammaticalRelations.valueOf("dep")); //without this asome adverbs or auxiliaries will end up in the relation
+        EXCLUDE_RELATIONS_VERB.add(UniversalEnglishGrammaticalRelations.valueOf("dep")); //without this asome adverbs or auxiliaries will end up in the relation
     }
 
     /** Constructs a proposition generator*/

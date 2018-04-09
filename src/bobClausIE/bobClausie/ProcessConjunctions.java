@@ -6,9 +6,10 @@ import java.util.List;
 
 import bobClausIE.bobClausie.Constituent.Type;
 import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
+
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.UniversalEnglishGrammaticalRelations;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 
@@ -51,7 +52,7 @@ public class ProcessConjunctions {
 
         List<SemanticGraphEdge> outedges = semanticGraph.getOutEdgesSorted(root);
         List<SemanticGraphEdge> conjunct = DpUtils.getEdges(outedges,
-                EnglishGrammaticalRelations.COORDINATION);
+        		UniversalEnglishGrammaticalRelations.COORDINATION);
         System.out.print("generateConstituents   siblings=\n"+semanticGraph.toString()
 		+" depTree="+depTree
 		+"  conjunct="+conjunct
@@ -62,27 +63,34 @@ public class ProcessConjunctions {
         
         //to avoid processing under certain circunstances must be design properly when final setup is decided 
 		if (conjunct != null) {
-			SemanticGraphEdge con = DpUtils.findFirstOfRelation(outedges,
-					EnglishGrammaticalRelations.QUANTIFIER_MODIFIER);//"About 200 people came to the party" → quantmod(200, About)
-			if (con != null && con.getDependent().lemma().equals("between"))
+			//JEFF changed; no exact UD equivalent
+			//SemanticGraphEdge con = DpUtils.findFirstOfRelation(outedges,UniversalEnglishGrammaticalRelations.QUANTIFIER_MODIFIER);
+			SemanticGraphEdge con = DpUtils.findFirstOfRelation(outedges,UniversalEnglishGrammaticalRelations.ADVERBIAL_MODIFIER);
+			
+			//JEFF removed "lemma" of "between"
+			//if (con != null && con.getDependent().lemma().equals("between"))
+			if (con != null && con.getDependent().equals("between"))
 				processCC = false;
 			List<SemanticGraphEdge> inedg = semanticGraph
 					.getIncomingEdgesSorted(root);
-			SemanticGraphEdge pobj = DpUtils.findFirstOfRelation(inedg,
-					EnglishGrammaticalRelations.PREPOSITIONAL_OBJECT);//"I sat on the chair" → pobj(on, chair)
-			// this wont work with collapsed dependencies
-			if (pobj != null && pobj.getGovernor().lemma().equals("between"))
-				processCC = false;
+			//Jeff Modified; pobj became nmod
+			//SemanticGraphEdge pobj = DpUtils.findFirstOfRelation(inedg,	UniversalEnglishGrammaticalRelations.PREPOSITIONAL_OBJECT);
+			SemanticGraphEdge pobj = DpUtils.findFirstOfRelation(inedg,	UniversalEnglishGrammaticalRelations.NOMINAL_MODIFIER);
+			// this wont work with collapsed dependencies <<- this is a pre-Jeff comment
+			
+			//JEFF removed the "lemma" for "between"
+			//if (pobj != null && pobj.getGovernor().lemma().equals("between"))	processCC = false;
+			if (pobj != null && pobj.getGovernor().equals("between"))	processCC = false;
 			Collection<IndexedWord> sibs = semanticGraph.getSiblings(root);
 			System.out.print("siblings="+sibs.toString()
 							+" parents="+semanticGraph.getParents(root));
 			for (IndexedWord sib : sibs) {
 				List<SemanticGraphEdge> insib = semanticGraph.getIncomingEdgesSorted(sib);
 				predet = DpUtils.findFirstOfRelation(insib,
-						EnglishGrammaticalRelations.PREDETERMINER);//"All the boys are here" → predet(boys,all)
+						UniversalEnglishGrammaticalRelations.PREDETERMINER);//"All the boys are here" → predet(boys,all)
 				if (predet == null)
 					predet = DpUtils.findFirstOfRelation(insib,
-							EnglishGrammaticalRelations.DETERMINER);
+							UniversalEnglishGrammaticalRelations.DETERMINER);
 				if (predet != null)
 					break;
 			}
@@ -90,25 +98,13 @@ public class ProcessConjunctions {
 		
        
         for (SemanticGraphEdge edge : outedges) {
-        	System.out.println("edge.getDependent().lemma()="+edge.getDependent().lemma()
-        			+" edge.getDependent()="+edge.getDependent()
-        			+" edge="+edge
-        			+" constituent.excludedVertexes.contains(edge.getDependent())="+constituent.excludedVertexes.contains(edge.getDependent())
-        			);
-        	if (DpUtils.isParataxis(edge) 
-        			|| DpUtils.isRcmod(edge) 
-        			|| DpUtils.isAppos(edge) 
-        			||(DpUtils.isDep(edge) && constituent.type.equals(Type.VERB) ) )
-        		continue;
-        	//to avoid processing relative clauses and 
-        	//appositions which are included as an independent clause 
-        	//in the clauses list of the sentence, also no dep in verbs are processed. 
-        	//To reproduce the results of the paper comment this line and eliminate the duplicate propositions 
-        	//that may be generated.
+        	if (DpUtils.isParataxis(edge) || DpUtils.isRcmod(edge) || DpUtils.isAppos(edge) ||(DpUtils.isDep(edge) && constituent.type.equals(Type.VERB) ) ) continue;//to avoid processing relative clauses and appositions which are included as an independent clause in the clauses list of the sentence, also no dep in verbs are processed. To reproduce the results of the paper comment this line and eliminate the duplicate propositions that may be generated.
             if (DpUtils.isAnyConj(edge) && processCC) {           	
             	boolean cont = false;
             	for(SemanticGraphEdge c : conjunct) {
-            		if(c.getDependent().lemma().equals("&") && nextToVerb(depTree, root.index(), edge.getDependent().index(), c.getDependent().index())) {
+            		//JEFF removed "lemma" of "&"
+            		//if(c.getDependent().lemma().equals("&") && nextToVerb(depTree, root.index(), edge.getDependent().index(), c.getDependent().index())) {
+            		if(c.getDependent().equals("&") && nextToVerb(depTree, root.index(), edge.getDependent().index(), c.getDependent().index())) {
             			cont = true;
             			break;
             		}
@@ -140,7 +136,9 @@ public class ProcessConjunctions {
                 // them
                 for (SemanticGraphEdge ed : outedges) {
                     IndexedWord child = ed.getDependent();
-                    if(DpUtils.isPredet(ed) && ed.getDependent().lemma().equals("both")) { //if it is one level down
+                    //JEFF removed "lemma" of "both"
+                    //if(DpUtils.isPredet(ed) && ed.getDependent().lemma().equals("both")) { //if it is one level down
+                    if(DpUtils.isPredet(ed) && ed.getDependent().equals("both")) { //if it is one level down	
                     	semanticGraph.removeEdge(ed);
                     } else if (!DpUtils.isAnyConj(ed) && !DpUtils.isCc(ed) && !DpUtils.isPreconj(ed)
                             && isDescendant(depTree, newRoot.index(), root.index(), child.index())) {
@@ -168,13 +166,9 @@ public class ProcessConjunctions {
                 
                 
                 // deletes the edge containing the conjunction e.g. and, or, but, etc
-                //Both the boys and the girls are here" → preconj(boys,both)
-            } else if ((DpUtils.isCc(edge) || 
-            		DpUtils.isPreconj(edge))&& 
-            		processCC 
-            	//	&& !edge.getDependent().lemma().equals("&")
-            		) {
-            	System.out.println("semanticGraph.removeEdge ");
+                //JEFF removed "lemma" of "&"
+                //} else if ((DpUtils.isCc(edge) || DpUtils.isPreconj(edge))&& processCC && !edge.getDependent().lemma().equals("&")) {
+            } else if ((DpUtils.isCc(edge) || DpUtils.isPreconj(edge))&& processCC && !edge.getDependent().equals("&")) {	
                 semanticGraph.removeEdge(edge);
             } else if(!DpUtils.isPredet(edge) && !constituent.excludedVertexes.contains(edge.getDependent())) {
             	System.out.println("generateConstituents");
@@ -228,11 +222,13 @@ public class ProcessConjunctions {
                         || edge.getGovernor().tag().charAt(0) == 'V';
                 //This condition will check if there is a cop conjoined with a verb
                 boolean ccCop = DpUtils.findFirstOfRelationOrDescendent(outed,
-                        EnglishGrammaticalRelations.COPULA) != null;               
+                        UniversalEnglishGrammaticalRelations.COPULA) != null;               
                 // this condition checks if there are two main clauses conjoined by the CC
                 boolean ccMainClauses = DpUtils.findFirstOfRelationOrDescendent(outed,
-                        EnglishGrammaticalRelations.SUBJECT) != null ||  DpUtils.findFirstOfRelationOrDescendent(outed,
-                                EnglishGrammaticalRelations.EXPLETIVE) != null;
+                        UniversalEnglishGrammaticalRelations.SUBJECT) != null ||  DpUtils.findFirstOfRelationOrDescendent(outed,
+                                UniversalEnglishGrammaticalRelations.EXPLETIVE) != null;
+                //There is a ghost in the room” expl(is, There)
+                
                 
                 // This flag will check if the cc should be processed according to the flag and the
                 // shared elements.
@@ -250,7 +246,7 @@ public class ProcessConjunctions {
                     //To remove the coordination
                     if (option.processCcAllVerbs || !notProcess) {
                         List<SemanticGraphEdge> conjunct = DpUtils.getEdges(outedges,
-                                EnglishGrammaticalRelations.COORDINATION);
+                                UniversalEnglishGrammaticalRelations.COORDINATION);
                         for (SemanticGraphEdge e : conjunct) {
                             if (e.getDependent().index() > edge.getDependent().index())
                                 continue;
